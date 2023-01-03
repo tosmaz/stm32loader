@@ -363,6 +363,16 @@ class Stm32Bootloader:
         if self.verbosity >= level:
             print(message, file=sys.stderr)
 
+    def push_extra_command(self, command:bytes):
+        print(f"Sending boot command: {command}")
+        self.connection.write(command)
+
+        tm = time.time()
+        while True:
+            _ = self.connection.read().hex()
+            if time.time() > (tm + 3):
+                break
+
     def reset_from_system_memory(self):
         """Reset the MCU with boot0 enabled to enter the bootloader."""
         self._enable_boot0(True)

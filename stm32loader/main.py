@@ -86,6 +86,11 @@ class Stm32Loader:
             """Convert to int with automatic base detection."""
             return int(x, 0)
 
+        def raw_data(x):
+            """Convert to bytes."""
+            x = x.encode('utf-8').decode('unicode_escape')
+            return bytes(x,'utf8')
+
         parser = argparse.ArgumentParser(
             prog="stm32loader",
             description="Flash firmware to STM32 microcontrollers.",
@@ -223,6 +228,14 @@ class Stm32Loader:
             help='Parity: "even" for STM32, "none" for BlueNRG.',
         )
 
+        parser.add_argument(
+            "-C",
+            "--command",
+            action="store",
+            type=raw_data,
+            help='Pass extra command to send to STM32 application to put it into boot mode.',
+        )
+
         parser.add_argument("--version", action="version", version=__version__)
 
         # Hack: We want certain arguments to be required when one
@@ -297,6 +310,9 @@ class Stm32Loader:
         self.stm32 = bootloader.Stm32Bootloader(
             serial_connection, verbosity=self.configuration.verbosity, show_progress=show_progress, device_family=self.configuration.family
         )
+
+        if self.configuration.command:
+            self.stm32.push_extra_command(self.configuration.command)
 
         try:
             print("Activating bootloader (select UART)")
